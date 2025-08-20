@@ -1,7 +1,6 @@
 name: android_printer_service
 description: "A Flutter plugin to print documents on Android devices via native print service."
 version: 0.0.1
-author: Duy Pham <xduy.pham@gmail.com>
 homepage: https://github.com/duypxd/android_print_service
 publish_to: "https://pub.dev"
 
