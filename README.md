@@ -24,7 +24,7 @@ dependencies:
 
 ## Demo
 
-![Android Print Service Demo](https://github.com/duypxd/android_print_service/raw/main/Demo.gif)
+![Android Print Service Demo](https://github.com/duypxd/android_print_service/raw/main/DemoPrinter.gif)
 
 ## Usage
 
