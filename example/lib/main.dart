@@ -74,13 +74,35 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _requestPermissionSystemAlert() async {
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && context.mounted) {
       final status = await Permission.systemAlertWindow.status;
-      if (status != PermissionStatus.granted && context.mounted) {
-        Future.delayed(
-          const Duration(milliseconds: 150),
-          () async => await Permission.systemAlertWindow.request(),
+      if (status != PermissionStatus.granted) {
+        final allow = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Permission Required"),
+            content: const Text(
+              "This app needs permission to run the Printer Service properly. Do you want to allow it?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("Deny"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Allow"),
+              ),
+            ],
+          ),
         );
+
+        if (allow == true) {
+          await Future.delayed(
+            const Duration(milliseconds: 150),
+            () => Permission.systemAlertWindow.request(),
+          );
+        }
       }
     }
   }

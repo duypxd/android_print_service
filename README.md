@@ -45,68 +45,95 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Subscription to listen for documents shared while app is in memory
-  late StreamSubscription<PrintFile?> _subscription;
-
-  // Store path of received file
+  late StreamSubscription _forwardPrintStreamSubs;
   String pathFile = '';
 
   @override
   void initState() {
     super.initState();
-    // Wait until first frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Request permission for system alert window (needed on Android)
-      _requestSystemAlertPermission();
 
-      // Delay a bit then start listening for shared documents
-      Future.delayed(const Duration(milliseconds: 320), _listenSharedDocs);
+    // 1. Wait for the widget tree to finish building
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 2. Request System Alert Window permission
+      _requestPermissionSystemAlert();
+
+      // 3. Delay before starting to listen to document stream
+      Future.delayed(const Duration(milliseconds: 320), () {
+        _onForwardPrintStreamSubs();
+      });
     });
   }
 
-  // Listen to documents shared while app is running and get initial document if app was closed
-  void _listenSharedDocs() {
-    _subscription = ForwardPrinter.getDocumentStream().listen(_onFileReceived);
-    ForwardPrinter.getInitialDocument().then(_onFileReceived);
+  // 4. Listen to shared documents
+  void _onForwardPrintStreamSubs() {
+    // Set the printer service name
+    ForwardPrinter.setPrinterName("My_Printer_Service");
+
+    // a) Listen for documents while the app is running
+    _forwardPrintStreamSubs = ForwardPrinter.getDocumentStream().listen(
+      _onForwardFile,
+    );
+
+    // b) Receive document if the app was just launched (previously closed)
+    ForwardPrinter.getInitialDocument().then(_onForwardFile);
   }
 
-  // Handle received file
-  void _onFileReceived(PrintFile? file) {
-    if (file?.path != null) {
-      setState(() {
-        pathFile = file!.path; // Update UI with received file path
-      });
-    }
+  // 5. Handle received file
+  void _onForwardFile(String? jsonStr) {
+    if (jsonStr == null) return;
+
+    final file = PrintFile.fromJson(jsonDecode(jsonStr));
+
+    _onPreviewFiles([file.path]);
   }
 
-  // Request Android system alert window permission if not granted
-  Future<void> _requestSystemAlertPermission() async {
-    if (!Platform.isAndroid) return; // Only needed on Android
-    final status = await Permission.systemAlertWindow.status;
-    if (status != PermissionStatus.granted && context.mounted) {
-      Future.delayed(
-        const Duration(milliseconds: 150),
-        () async => await Permission.systemAlertWindow.request(),
-      );
+  // 6. Display the file inside the app
+  void _onPreviewFiles(List<String> paths) async {
+    setState(() {
+      pathFile = paths.first; // preview only the first file
+    });
+  }
+
+  // 7. Request System Alert Window permission
+  Future<void> _requestPermissionSystemAlert() async {
+    if (Platform.isAndroid && context.mounted) {
+      final status = await Permission.systemAlertWindow.status;
+      if (status != PermissionStatus.granted) {
+        final allow = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Permission Required"),
+            content: const Text(
+              "This app needs permission to run the Printer Service properly. Do you want to allow it?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("Deny"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Allow"),
+              ),
+            ],
+          ),
+        );
+
+        if (allow == true) {
+          await Future.delayed(
+            const Duration(milliseconds: 150),
+            () => Permission.systemAlertWindow.request(),
+          );
+        }
+      }
     }
   }
 
   @override
   void dispose() {
-    _subscription.cancel(); // Cancel stream subscription to prevent memory leaks
+    // 8. Cancel the stream when the widget is disposed
+    _forwardPrintStreamSubs.cancel();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Android Print Service Demo')),
-      body: Center(
-        child: pathFile.isEmpty
-            ? const Text('No file received') // Show message if no file
-            : Text('Received file: $pathFile'), // Display received file path
-      ),
-    );
   }
 }
 ```
