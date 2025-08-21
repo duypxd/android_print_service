@@ -19,12 +19,12 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  android_printer_service: ^0.0.1
+  android_printer_service: ^0.0.2
 ```
 
 ## Demo
 
-![Android Print Service Demo](Demo.gif)
+![Android Print Service Demo](https://github.com/duypxd/android_print_service/raw/main/Demo.gif)
 
 ## Usage
 
@@ -136,4 +136,18 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 }
+```
+
+## Donate
+
+If you find this plugin useful and want to support development, you can donate:
+
+**Scan QR code:**
+
+![Donate QR](donate.jpeg)
+
+**Or copy & send via Crypto:**
+
+```
+TYgEZMKdFYaVKm3iuHVRYXxnEQScqWoatP
 ```
