@@ -19,7 +19,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  android_printer_service: ^0.0.2
+  android_printer_service: ^0.0.3
 ```
 
 ## Demo
