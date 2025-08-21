@@ -24,7 +24,7 @@ dependencies:
 
 ## Demo
 
-![Android Print Service Demo](ScreenRecording.gif)
+![Android Print Service Demo](Demo.gif)
 
 ## Usage
 
