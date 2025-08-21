@@ -50,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _onForwardPrintStreamSubs() {
+    ForwardPrinter.setPrinterName("My_Printer_Service");
     // For sharing images coming from outside the app while the app is in the memory
     _forwardPrintStreamSubs = ForwardPrinter.getDocumentStream().listen(
       _onForwardFile,

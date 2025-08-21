@@ -32,6 +32,11 @@ class ForwardPrinter {
   static void reset() {
     _mChannel.invokeMethod('reset').then((_) {});
   }
+
+  /// Set custom printer name
+  static Future<void> setPrinterName(String name) async {
+    await _mChannel.invokeMethod('setPrinterName', {'name': name});
+  }
 }
 
 /// Model representing a forwarded print file.

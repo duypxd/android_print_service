@@ -19,6 +19,8 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodChannel.MethodCallHandler, Eve
     private var latestDocument: JSONObject? = null
     private var eventSinkDocument: EventChannel.EventSink? = null
 
+    var printerName: String? = null
+
     fun pushFile(path: String) {
         val value = JSONObject().put("path", path)
         Log.i(TAG, "#sinkDataIntoStream $value")
@@ -59,6 +61,13 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodChannel.MethodCallHandler, Eve
             "reset" -> {
                 initialDocument = null
                 latestDocument = null
+                result.success(null)
+            }
+            "setPrinterName" -> {
+                val name = call.argument<String>("name")
+                if (name != null) {
+                    printerName = name
+                }
                 result.success(null)
             }
             else -> result.notImplemented()

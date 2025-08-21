@@ -22,8 +22,15 @@ class ForwardPrintService : PrintService() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "#onCreate()")
-        printerInfo = PrinterInfo.Builder(generatePrinterId("AppName_Print_Service"),
-                "AppName_Print_Service", PrinterInfo.STATUS_IDLE).build()
+
+        val pluginName = try {
+            ForwardPrintPlugin.getInstance().printerName ?: "Print_Service"
+        } catch (e: Exception) {
+            "Print_Service"
+        }
+
+        printerInfo = PrinterInfo.Builder(generatePrinterId(pluginName),
+                pluginName, PrinterInfo.STATUS_IDLE).build()
     }
 
     override fun onConnected() {
@@ -78,23 +85,24 @@ class ForwardPrintService : PrintService() {
 
         val format = SimpleDateFormat("yyyy_MM_dd", Locale.getDefault())
         val currentDate = Date()
-        
-        val fileName = "AppName_Print_Service_" + format.format(currentDate) + "_" + System.currentTimeMillis().toString() + ".pdf"
+        val pluginName = try {
+            ForwardPrintPlugin.getInstance().printerName ?: "Print_Service"
+        } catch (e: Exception) {
+            "Print_Service"
+        }
+        val fileName = "${pluginName}_${format.format(currentDate)}_${System.currentTimeMillis()}.pdf"
 
         val file = File(filesDir, fileName)
-        val inS: InputStream?
-        val outS: FileOutputStream?
         try {
-            inS = FileInputStream(printJob.document.data!!.fileDescriptor)
-            outS = FileOutputStream(file)
-            val buffer = ByteArray(1024)
-            var read: Int
-            while (inS.read(buffer).also { read = it } != -1) {
-                outS.write(buffer, 0, read)
+            FileInputStream(printJob.document.data!!.fileDescriptor).use { inS ->
+                FileOutputStream(file).use { outS ->
+                    val buffer = ByteArray(1024)
+                    var read: Int
+                    while (inS.read(buffer).also { read = it } != -1) {
+                        outS.write(buffer, 0, read)
+                    }
+                }
             }
-            inS.close()
-            outS.flush()
-            outS.close()
             return file.path
         } catch (ioe: IOException) {
             Log.e(TAG, ioe.toString())
