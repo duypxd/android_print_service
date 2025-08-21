@@ -49,7 +49,12 @@ class ForwardPrintService : PrintService() {
             try {
                 val path = getFilePath(printJob)
                 if (path != null) {
-                    ForwardPrintPlugin.getInstance().pushFile(path)
+                    try {
+                        ForwardPrintPlugin.getInstance().pushFile(path)
+                    } catch (e: IllegalStateException) {
+                        Log.e(TAG, "Plugin not attached, save data temporarily if needed")
+                    }
+
                     val intent = packageManager.getLaunchIntentForPackage(packageName)
                     if (intent != null) {
                         Log.i(TAG, "#openApp()")

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:android_printer_service/android_printer_service.dart';
@@ -57,10 +58,12 @@ class _MyHomePageState extends State<MyHomePage> {
     ForwardPrinter.getInitialDocument().then(_onForwardFile);
   }
 
-  void _onForwardFile(PrintFile? file) async {
-    if (file?.path != null) {
-      _onPreviewFiles([file!.path]);
-    }
+  void _onForwardFile(String? jsonStr) {
+    if (jsonStr == null) return;
+
+    final file = PrintFile.fromJson(jsonDecode(jsonStr));
+
+    _onPreviewFiles([file.path]);
   }
 
   void _onPreviewFiles(List<String> paths) async {

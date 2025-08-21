@@ -3,17 +3,14 @@ package com.example.android_printer_service
 import android.util.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
-import io.flutter.plugin.common.EventChannel.StreamHandler
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import org.json.JSONObject
-
 
 private const val MESSAGES_CHANNEL = "forward_print/messages"
 private const val EVENTS_CHANNEL_DOCUMENT = "forward_print/events-document"
 
-class ForwardPrintPlugin() : FlutterPlugin, MethodCallHandler, StreamHandler {
+class ForwardPrintPlugin() : FlutterPlugin, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
     private var mChannel: MethodChannel? = null
     private var eChannelDocument: EventChannel? = null
@@ -22,19 +19,17 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodCallHandler, StreamHandler {
     private var latestDocument: JSONObject? = null
     private var eventSinkDocument: EventChannel.EventSink? = null
 
-
     fun pushFile(path: String) {
-        val value = JSONObject()
-                .put("path", path)
+        val value = JSONObject().put("path", path)
         Log.i(TAG, "#sinkDataIntoStream $value")
 
         latestDocument = value
         eventSinkDocument?.success(value.toString())
     }
 
-
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val binaryMessenger = binding.binaryMessenger;
+        instance = this
+        val binaryMessenger = binding.binaryMessenger
 
         mChannel = MethodChannel(binaryMessenger, MESSAGES_CHANNEL)
         mChannel?.setMethodCallHandler(this)
@@ -54,6 +49,8 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodCallHandler, StreamHandler {
 
         initialDocument = null
         latestDocument = null
+
+        instance = null
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -64,21 +61,16 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodCallHandler, StreamHandler {
                 latestDocument = null
                 result.success(null)
             }
-
             else -> result.notImplemented()
         }
     }
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-        when (arguments) {
-            "document" -> eventSinkDocument = events
-        }
+        eventSinkDocument = events
     }
 
     override fun onCancel(arguments: Any?) {
-        when (arguments) {
-            "document" -> eventSinkDocument = null
-        }
+        eventSinkDocument = null
     }
 
     companion object {
@@ -87,10 +79,8 @@ class ForwardPrintPlugin() : FlutterPlugin, MethodCallHandler, StreamHandler {
         @Volatile
         private var instance: ForwardPrintPlugin? = null
 
-        fun getInstance() = instance ?: synchronized(this) {
-            instance ?: ForwardPrintPlugin().also { instance = it }
+        fun getInstance(): ForwardPrintPlugin {
+            return instance ?: throw IllegalStateException("ForwardPrintPlugin not attached")
         }
     }
-
-
 }
